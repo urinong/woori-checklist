@@ -503,3 +503,190 @@ main { padding: 28px 0 60px; }
   .compare-table th, .compare-table td { padding: 6px 8px; }
   body { font-size: 14px; }
 }
+
+/* ============================================================
+ * AI 분석 결과 카드 (marked.js 렌더링 영역)
+ * ============================================================ */
+.result-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+  margin-top: 24px;
+}
+
+/* 마크다운 H4 (#### 섹션 헤더) */
+.result-card h4 {
+  color: var(--green-dark);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--green-light);
+}
+.result-card h4:first-child { margin-top: 0; }
+
+.result-card h3 {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 24px 0 10px;
+}
+
+/* 마크다운 테이블 */
+.result-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 20px;
+  font-size: 14px;
+}
+.result-card th {
+  background: var(--bg-section);
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+}
+.result-card td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.result-card tr:nth-child(even) td { background: var(--bg-section); }
+.result-card tr:hover td          { background: var(--green-light); }
+
+/* 마크다운 리스트 */
+.result-card ul, .result-card ol {
+  padding-left: 22px;
+  margin: 8px 0 14px;
+}
+.result-card li {
+  margin-bottom: 8px;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+.result-card li > ul { margin-top: 6px; }
+
+/* 마크다운 p */
+.result-card p { margin: 0 0 12px; line-height: 1.7; }
+
+/* 마크다운 코드 */
+.result-card code {
+  background: var(--bg-section);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* 마크다운 hr */
+.result-card hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* ── 로딩 ────────────────────────────── */
+.loading-box {
+  text-align: center;
+  padding: 52px 24px;
+  color: var(--text-secondary);
+}
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--border);
+  border-top-color: var(--green-primary);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto 18px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-box p { margin: 6px 0; font-size: 15px; }
+.loading-sub   { color: var(--text-muted) !important; font-size: 13px !important; }
+
+/* ── 캐시 알림 ───────────────────────── */
+.cache-notice {
+  background: var(--blue-bg);
+  color: var(--blue-dark);
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 에러 박스 ───────────────────────── */
+.error-box {
+  background: var(--red-bg);
+  color: var(--red-dark);
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--red);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ── 결과 하단 버튼 행 ───────────────── */
+.result-actions {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 공통 액션 버튼 */
+.result-actions button {
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+/* 요청사항 복사 */
+.copy-btn {
+  background: var(--green-primary);
+  color: #fff;
+}
+.copy-btn:hover { background: var(--green-dark); }
+
+/* 새로 분석하기 */
+.reanalyze-btn {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border) !important;
+}
+.reanalyze-btn:hover { background: var(--bg-section); }
+
+/* 새 물품 분석하기 */
+.reset-btn {
+  background: var(--blue-bg);
+  color: var(--blue-dark);
+  border: 1px solid var(--blue) !important;
+}
+.reset-btn:hover { background: var(--blue); color: #fff; }
+
+/* ── 인라인 파일명 ───────────────────── */
+.filename-inline {
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 8px;
+  word-break: break-all;
+}
+
+/* ── 반응형 보정 ─────────────────────── */
+@media (max-width: 768px) {
+  .result-card { padding: 18px; }
+  .result-actions { gap: 8px; }
+  .result-actions button { padding: 8px 14px; font-size: 13px; }
+}

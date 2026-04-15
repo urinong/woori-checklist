@@ -1,29 +1,35 @@
-"""우리농 신규물품 출하 준비 자가진단 체크리스트 — Flask 앱"""
+"""우리농 신규물품 출하 준비 자가진단 체크리스트 — Flask 앱
+
+라우트:
+  GET  /                       → 메인 페이지
+  POST /api/analyze-quick      → 기능 A: AI 빠른 진단 (신규)
+  POST /api/analyze-verify     → 기능 B: AI 서류 검증 (신규)
+  GET  /api/download/<file>    → 엑셀 다운로드
+"""
 import os
 import uuid
+import base64
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
 from config import (
     UPLOAD_DIR, OUTPUT_DIR, MAX_CONTENT_LENGTH,
     ALLOWED_EXTENSIONS, PORT, DEBUG,
 )
-from engine.pdf_parser import parse as parse_pdf
-from engine.checklist_engine import ChecklistEngine
-from engine.doc_matcher import classify_documents, verify_documents
-from engine.image_reader import read_label_image
-from engine.label_comparator import compare as label_compare
-from engine.report_generator import generate as generate_report
+from engine.pdf_parser import extract_text_from_pdf
+from engine.ai_analyzer import analyze_quick_diagnosis, analyze_document_verification
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs("cache", exist_ok=True)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
 
-engine = ChecklistEngine()
 
-
-# -------------------- 유틸 --------------------
+# ─────────────────────────────────────────────────
+# 유틸
+# ─────────────────────────────────────────────────
 
 def _allowed(filename: str) -> bool:
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
@@ -31,7 +37,7 @@ def _allowed(filename: str) -> bool:
 
 
 def _safe_save(file_storage) -> str:
-    """한글 파일명 지원: 확장자만 유지하고 UUID로 저장."""
+    """한글 파일명 지원: UUID 기반 저장."""
     original = file_storage.filename or ""
     ext = original.rsplit(".", 1)[-1].lower() if "." in original else ""
     name = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
@@ -40,122 +46,98 @@ def _safe_save(file_storage) -> str:
     return path
 
 
-def _is_pdf(path: str) -> bool:
-    return path.lower().endswith(".pdf")
+def _file_to_b64(file_storage) -> dict:
+    """파일 스토리지 → base64 이미지 dict"""
+    data = base64.b64encode(file_storage.read()).decode("utf-8")
+    mt = file_storage.content_type or "image/jpeg"
+    return {"data": data, "media_type": mt}
 
 
-def _is_image(path: str) -> bool:
-    return any(path.lower().endswith(e) for e in (".jpg", ".jpeg", ".png"))
-
-
-# -------------------- 라우트 --------------------
+# ─────────────────────────────────────────────────
+# 라우트
+# ─────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-@app.route("/api/quick-diagnosis", methods=["POST"])
-def api_quick_diagnosis():
-    """기능 A: 빠른 진단 — 포장지 사진 또는 물품사양서 PDF 하나"""
-    f = request.files.get("file")
-    if not f or not f.filename:
-        return jsonify({"error": "파일이 없습니다"}), 400
-    if not _allowed(f.filename):
-        return jsonify({"error": "지원하지 않는 파일 형식입니다 (PDF/JPG/PNG)"}), 400
+# ── 기능 A: AI 빠른 진단 ──────────────────────────
 
-    path = _safe_save(f)
-    try:
-        if _is_pdf(path):
-            spec = parse_pdf(path)
-            result = engine.diagnose(spec)
-        else:
-            # 포장지 이미지 → OCR → 간이 spec 생성
-            label = read_label_image(path)
-            from engine.pdf_parser import ProductSpec
-            spec = ProductSpec()
-            for k in ("제품명", "식품유형", "내용량", "보관방법", "알레르기물질",
-                      "품목보고번호", "용기포장재질", "소비기한"):
-                if isinstance(label, dict) and label.get(k):
-                    setattr(spec, k, str(label[k]))
-            spec.raw_text = (label.get("raw") if isinstance(label, dict) else "") or ""
-            result = engine.diagnose(spec)
+@app.route("/api/analyze-quick", methods=["POST"])
+def analyze_quick():
+    """기능 A: 빠른 진단 — AI 분석 엔진"""
+    force = request.args.get("force", "").lower() == "true"
 
-        # 엑셀 보고서 생성
-        report_path = generate_report(result)
-        return jsonify({
-            "ok": True,
-            "result": result.as_dict(),
-            "report_file": os.path.basename(report_path),
-        })
-    except Exception as e:
-        app.logger.exception("quick-diagnosis error")
-        return jsonify({"error": f"진단 중 오류: {e}"}), 500
+    pdf_text = None
+    images = None
+
+    # PDF 처리
+    pdf_file = request.files.get("pdf_file")
+    if pdf_file and pdf_file.filename and _allowed(pdf_file.filename):
+        pdf_path = _safe_save(pdf_file)
+        pdf_text = extract_text_from_pdf(pdf_path)
+
+    # 포장지 이미지
+    label_img = request.files.get("label_image")
+    if label_img and label_img.filename and _allowed(label_img.filename):
+        images = [_file_to_b64(label_img)]
+
+    if not pdf_text and not images:
+        return jsonify({"error": "파일이 없습니다. 물품사양서 PDF 또는 포장지 사진을 업로드해주세요."}), 400
+
+    result = analyze_quick_diagnosis(pdf_text=pdf_text, images=images, force=force)
+    return jsonify(result)
 
 
-@app.route("/api/document-verification", methods=["POST"])
-def api_document_verification():
-    """기능 B: 서류 검증"""
-    label_file = request.files.get("label")          # 포장지 이미지 (선택)
-    spec_file = request.files.get("spec")            # 물품사양서 PDF (필수)
-    docs = request.files.getlist("docs")             # 증빙서류 복수
+# ── 기능 B: AI 서류 검증 ──────────────────────────
 
-    if not spec_file or not spec_file.filename:
-        return jsonify({"error": "물품사양서 PDF는 필수입니다"}), 400
+@app.route("/api/analyze-verify", methods=["POST"])
+def analyze_verify():
+    """기능 B: 서류 검증 — AI 분석 엔진"""
+    force = request.args.get("force", "").lower() == "true"
 
-    spec_path = _safe_save(spec_file)
-    try:
-        spec = parse_pdf(spec_path)
-    except Exception as e:
-        return jsonify({"error": f"물품사양서 파싱 실패: {e}"}), 500
+    pdf_text = None
+    supporting_docs_text = ""
+    images = None
 
-    # 포장지 OCR
-    label_data = None
-    compare_rows = []
-    if label_file and label_file.filename:
-        label_path = _safe_save(label_file)
-        try:
-            label_data = read_label_image(label_path)
-            compare_rows = [
-                {"field": r.field, "label": r.label_value, "spec": r.spec_value,
-                 "status": r.status, "icon": r.icon}
-                for r in label_compare(label_data, spec)
-            ]
-        except Exception as e:
-            app.logger.warning(f"label OCR skip: {e}")
+    # 물품사양서 PDF (필수)
+    pdf_file = request.files.get("pdf_file")
+    if pdf_file and pdf_file.filename and _allowed(pdf_file.filename):
+        pdf_path = _safe_save(pdf_file)
+        pdf_text = extract_text_from_pdf(pdf_path)
 
-    # 증빙서류 분류
-    doc_paths = []
-    for d in docs or []:
-        if d and d.filename and _allowed(d.filename):
-            doc_paths.append(_safe_save(d))
-    # 물품사양서도 포함
-    all_doc_paths = [spec_path] + doc_paths
-    matched = classify_documents(all_doc_paths)
+    if not pdf_text:
+        return jsonify({"error": "물품사양서 PDF를 업로드해주세요."}), 400
 
-    # 체크리스트 생성 → 서류 검증
-    result = engine.diagnose(spec)
-    verified = verify_documents(spec, result.required_documents, matched)
-    result.required_documents = verified
+    # 증빙서류 (복수)
+    docs = request.files.getlist("supporting_docs")
+    doc_texts = []
+    for i, doc in enumerate(docs or []):
+        if doc and doc.filename and _allowed(doc.filename):
+            doc_path = _safe_save(doc)
+            if doc.filename.lower().endswith(".pdf"):
+                text = extract_text_from_pdf(doc_path)
+                doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} ---\n{text}")
+            else:
+                doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} (이미지 파일) ---")
+    supporting_docs_text = "\n\n".join(doc_texts)
 
-    # 요청사항 재생성 (미제출 서류도 포함)
-    extra_reqs = [it.action for it in verified if it.status in ("missing", "warning") and it.action]
-    result.request_to_producer = list(dict.fromkeys(result.request_to_producer + extra_reqs))
+    # 포장지 사진 (선택)
+    label_img = request.files.get("label_image")
+    if label_img and label_img.filename and _allowed(label_img.filename):
+        images = [_file_to_b64(label_img)]
 
-    report_path = generate_report(result)
-    return jsonify({
-        "ok": True,
-        "result": result.as_dict(),
-        "label_compare": compare_rows,
-        "matched_docs": [
-            {"doc_type": m.doc_type, "file": m.source_file,
-             "page_range": m.page_range, "product_name": m.product_name_found,
-             "expiry": m.expiry_date}
-            for m in matched
-        ],
-        "report_file": os.path.basename(report_path),
-    })
+    result = analyze_document_verification(
+        pdf_text=pdf_text,
+        supporting_docs_text=supporting_docs_text,
+        images=images,
+        force=force,
+    )
+    return jsonify(result)
 
+
+# ── 다운로드 ──────────────────────────────────────
 
 @app.route("/api/download/<path:filename>")
 def api_download(filename):

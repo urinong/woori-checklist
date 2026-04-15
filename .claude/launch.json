@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "woori-review-app",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["/tmp/woori-preview/app.py"],
+      "port": 5001,
+      "autoPort": true
+    }
+  ]
+}

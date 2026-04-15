@@ -3,6 +3,8 @@
 우리농 물품사양서 PDF에서 제품 기본정보와 원재료 정보를 추출합니다.
 - 1페이지: 물품표시사항 (4열 레이아웃) + 원재료 테이블
 - 2페이지: 물품의 특징, 제조공정 등
+
+AI 분석 엔진(ai_analyzer.py)에서는 extract_text_from_pdf()를 사용합니다.
 """
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Dict, Any
@@ -277,3 +279,21 @@ def _clean(s: str) -> str:
     if s is None:
         return ""
     return str(s).replace("\n", " ").strip()
+
+
+# ─────────────────────────────────────────────────
+# AI 분석 엔진용 전체 텍스트 추출
+# ─────────────────────────────────────────────────
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    """PDF 전 페이지 텍스트를 하나의 문자열로 추출 (AI 분석 엔진용)."""
+    pages = []
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for i, page in enumerate(pdf.pages):
+                text = page.extract_text() or ""
+                if text.strip():
+                    pages.append(f"[PAGE {i+1}]\n{text}")
+    except Exception as e:
+        return f"[PDF 텍스트 추출 실패: {e}]"
+    return "\n\n".join(pages)

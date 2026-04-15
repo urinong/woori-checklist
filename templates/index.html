@@ -5,14 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>우리농 신규물품 자가진단 체크리스트</title>
 
-  <!-- Noto Sans KR (디자인 가이드 지정) -->
+  <!-- Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- marked.js: 마크다운 → HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <!-- ───────── 헤더 ───────── -->
   <header class="site-header">
     <div class="container">
       <div class="header-logos">
@@ -27,6 +31,7 @@
     </div>
   </header>
 
+  <!-- ───────── 탭 ───────── -->
   <nav class="tab-nav">
     <div class="container">
       <button class="tab-btn active" data-tab="quick">📋 빠른 진단</button>
@@ -34,57 +39,90 @@
     </div>
   </nav>
 
+  <!-- ───────── 메인 ───────── -->
   <main class="container">
+
     <!-- ==== 빠른 진단 ==== -->
     <section id="tab-quick" class="tab-panel active">
       <div class="section-intro">
         <h2>📋 빠른 진단</h2>
-        <p>포장지 사진이나 물품사양서를 올리면, 출하에 필요한 서류와 주의사항을 알려드려요.</p>
+        <p>포장지 사진이나 물품사양서를 올리면, AI가 출하에 필요한 서류와 주의사항을 분석해드려요.</p>
       </div>
 
       <form id="quick-form" class="upload-form">
         <label class="dropzone" id="quick-drop">
-          <input type="file" name="file" id="quick-file" accept=".pdf,.jpg,.jpeg,.png" hidden>
+          <input type="file" name="pdf_file" id="quick-pdf"
+                 accept=".pdf" hidden>
           <div class="drop-content">
-            <div class="icons">📷 &nbsp; 📄</div>
-            <p><strong>포장지 사진 (JPG/PNG)</strong> 또는 <strong>물품사양서 PDF</strong></p>
+            <div class="icons">📄</div>
+            <p><strong>물품사양서 PDF</strong></p>
             <p class="muted">여기에 끌어놓거나 클릭하여 선택</p>
-            <p class="filename" id="quick-filename"></p>
+            <p class="filename" id="quick-pdf-name"></p>
           </div>
         </label>
-        <button type="submit" class="primary-btn">진단 시작</button>
+
+        <div class="file-row" style="margin-top:12px;">
+          <label>📷 포장지 사진 (선택, JPG/PNG)</label>
+          <input type="file" name="label_image" id="quick-img" accept=".jpg,.jpeg,.png">
+          <span class="filename-inline" id="quick-img-name"></span>
+        </div>
+
+        <button type="submit" class="primary-btn" id="quick-submit-btn">진단 시작</button>
       </form>
 
-      <div id="quick-result" class="result-area"></div>
+      <!-- 결과 영역 -->
+      <div id="quick-result-area" class="result-card" style="display:none;">
+        <div id="quick-result-content"></div>
+        <div class="result-actions" id="quick-result-actions" style="display:none;">
+          <button type="button" class="copy-btn" onclick="copyRequest('quick')">📋 요청사항 복사</button>
+          <button type="button" class="reanalyze-btn" onclick="reanalyze('quick')">🔄 새로 분석하기</button>
+          <button type="button" class="reset-btn" onclick="resetForm('quick')">🆕 새 물품 분석하기</button>
+        </div>
+      </div>
     </section>
 
     <!-- ==== 서류 검증 ==== -->
     <section id="tab-verify" class="tab-panel">
       <div class="section-intro">
         <h2>✅ 서류 검증</h2>
-        <p>받은 서류가 다 맞는지 점검해보세요.</p>
+        <p>물품사양서와 증빙서류를 올리면, AI가 완비 여부와 내용 적합성을 검증해드려요.</p>
       </div>
 
       <form id="verify-form" class="upload-form">
         <div class="file-row">
-          <label>📷 포장지 사진 (JPG/PNG)</label>
-          <input type="file" name="label" accept=".jpg,.jpeg,.png">
-        </div>
-        <div class="file-row">
           <label>📄 물품사양서 PDF <span class="required">*</span></label>
-          <input type="file" name="spec" accept=".pdf" required>
+          <input type="file" name="pdf_file" id="verify-pdf" accept=".pdf" required>
+          <span class="filename-inline" id="verify-pdf-name"></span>
         </div>
         <div class="file-row">
           <label>📎 증빙서류 (복수 선택)</label>
-          <input type="file" name="docs" accept=".pdf,.jpg,.jpeg,.png" multiple>
+          <input type="file" name="supporting_docs" id="verify-docs"
+                 accept=".pdf,.jpg,.jpeg,.png" multiple>
+          <span class="filename-inline" id="verify-docs-name"></span>
         </div>
-        <button type="submit" class="primary-btn">검증 시작</button>
+        <div class="file-row">
+          <label>📷 포장지 사진 (선택, JPG/PNG)</label>
+          <input type="file" name="label_image" id="verify-img"
+                 accept=".jpg,.jpeg,.png">
+          <span class="filename-inline" id="verify-img-name"></span>
+        </div>
+        <button type="submit" class="primary-btn" id="verify-submit-btn">검증 시작</button>
       </form>
 
-      <div id="verify-result" class="result-area"></div>
+      <!-- 결과 영역 -->
+      <div id="verify-result-area" class="result-card" style="display:none;">
+        <div id="verify-result-content"></div>
+        <div class="result-actions" id="verify-result-actions" style="display:none;">
+          <button type="button" class="copy-btn" onclick="copyRequest('verify')">📋 요청사항 복사</button>
+          <button type="button" class="reanalyze-btn" onclick="reanalyze('verify')">🔄 새로 분석하기</button>
+          <button type="button" class="reset-btn" onclick="resetForm('verify')">🆕 새 물품 분석하기</button>
+        </div>
+      </div>
     </section>
+
   </main>
 
+  <!-- ───────── 푸터 ───────── -->
   <footer class="site-footer">
     <div class="container">
       <strong>2026년 가톨릭농민회 · 우리농촌살리기운동본부</strong><br>
