@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>우리농 신규물품 자가진단 체크리스트</title>
+
+  <!-- Noto Sans KR (디자인 가이드 지정) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-logos">
+        <div class="logo-placeholder">가톨릭농민회</div>
+        <div class="logo-placeholder alt">우리농</div>
+      </div>
+      <h1>
+        우리농 신규물품 출하 준비
+        <span class="sub">자가진단 체크리스트</span>
+      </h1>
+      <p class="subtitle">교구 실무자를 위한 신규물품 출하 서류 점검 도구</p>
+    </div>
+  </header>
+
+  <nav class="tab-nav">
+    <div class="container">
+      <button class="tab-btn active" data-tab="quick">📋 빠른 진단</button>
+      <button class="tab-btn" data-tab="verify">✅ 서류 검증</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- ==== 빠른 진단 ==== -->
+    <section id="tab-quick" class="tab-panel active">
+      <div class="section-intro">
+        <h2>📋 빠른 진단</h2>
+        <p>포장지 사진이나 물품사양서를 올리면, 출하에 필요한 서류와 주의사항을 알려드려요.</p>
+      </div>
+
+      <form id="quick-form" class="upload-form">
+        <label class="dropzone" id="quick-drop">
+          <input type="file" name="file" id="quick-file" accept=".pdf,.jpg,.jpeg,.png" hidden>
+          <div class="drop-content">
+            <div class="icons">📷 &nbsp; 📄</div>
+            <p><strong>포장지 사진 (JPG/PNG)</strong> 또는 <strong>물품사양서 PDF</strong></p>
+            <p class="muted">여기에 끌어놓거나 클릭하여 선택</p>
+            <p class="filename" id="quick-filename"></p>
+          </div>
+        </label>
+        <button type="submit" class="primary-btn">진단 시작</button>
+      </form>
+
+      <div id="quick-result" class="result-area"></div>
+    </section>
+
+    <!-- ==== 서류 검증 ==== -->
+    <section id="tab-verify" class="tab-panel">
+      <div class="section-intro">
+        <h2>✅ 서류 검증</h2>
+        <p>받은 서류가 다 맞는지 점검해보세요.</p>
+      </div>
+
+      <form id="verify-form" class="upload-form">
+        <div class="file-row">
+          <label>📷 포장지 사진 (JPG/PNG)</label>
+          <input type="file" name="label" accept=".jpg,.jpeg,.png">
+        </div>
+        <div class="file-row">
+          <label>📄 물품사양서 PDF <span class="required">*</span></label>
+          <input type="file" name="spec" accept=".pdf" required>
+        </div>
+        <div class="file-row">
+          <label>📎 증빙서류 (복수 선택)</label>
+          <input type="file" name="docs" accept=".pdf,.jpg,.jpeg,.png" multiple>
+        </div>
+        <button type="submit" class="primary-btn">검증 시작</button>
+      </form>
+
+      <div id="verify-result" class="result-area"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <strong>2026년 가톨릭농민회 · 우리농촌살리기운동본부</strong><br>
+      생산소비실무자회의 · 가공식품위원회
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

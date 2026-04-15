@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# 환경변수
+.env
+.env.*
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# 업로드/생성 파일 (배포 환경에서 재생성)
+uploads/*
+outputs/*
+!uploads/.gitkeep
+!outputs/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# 로그
+*.log
