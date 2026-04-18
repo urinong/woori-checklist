@@ -18,7 +18,7 @@ from pathlib import Path
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 API_URL = "https://api.anthropic.com/v1/messages"
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-5-20250929"
 MAX_TOKENS = 8000
 
 CACHE_DIR = Path("cache")
