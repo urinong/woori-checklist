@@ -31,10 +31,8 @@ function bindFilename(inputId, labelId) {
   });
 }
 bindFilename("quick-pdf",   "quick-pdf-name");
-bindFilename("quick-img",   "quick-img-name");
 bindFilename("verify-pdf",  "verify-pdf-name");
 bindFilename("verify-docs", "verify-docs-name");
-bindFilename("verify-img",  "verify-img-name");
 
 // ── 드래그앤드롭 (빠른 진단 dropzone) ──────────────
 const drop   = document.getElementById("quick-drop");
@@ -160,7 +158,7 @@ function resetForm(tab) {
 
   form.reset();
   // 파일명 표시 초기화
-  ["quick-pdf-name","quick-img-name","verify-pdf-name","verify-docs-name","verify-img-name"]
+  ["quick-pdf-name","verify-pdf-name","verify-docs-name"]
     .forEach(id => { const el=document.getElementById(id); if(el) el.textContent=""; });
 
   content.innerHTML = "";

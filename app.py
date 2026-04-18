@@ -8,7 +8,6 @@
 """
 import os
 import uuid
-import base64
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
@@ -46,13 +45,6 @@ def _safe_save(file_storage) -> str:
     return path
 
 
-def _file_to_b64(file_storage) -> dict:
-    """파일 스토리지 → base64 이미지 dict"""
-    data = base64.b64encode(file_storage.read()).decode("utf-8")
-    mt = file_storage.content_type or "image/jpeg"
-    return {"data": data, "media_type": mt}
-
-
 # ─────────────────────────────────────────────────
 # 라우트
 # ─────────────────────────────────────────────────
@@ -69,24 +61,15 @@ def analyze_quick():
     """기능 A: 빠른 진단 — AI 분석 엔진"""
     force = request.args.get("force", "").lower() == "true"
 
-    pdf_text = None
-    images = None
-
     # PDF 처리
     pdf_file = request.files.get("pdf_file")
-    if pdf_file and pdf_file.filename and _allowed(pdf_file.filename):
-        pdf_path = _safe_save(pdf_file)
-        pdf_text = extract_text_from_pdf(pdf_path)
+    if not pdf_file or not pdf_file.filename or not _allowed(pdf_file.filename):
+        return jsonify({"error": "파일이 없습니다. 물품사양서 PDF를 업로드해주세요."}), 400
 
-    # 포장지 이미지
-    label_img = request.files.get("label_image")
-    if label_img and label_img.filename and _allowed(label_img.filename):
-        images = [_file_to_b64(label_img)]
+    pdf_path = _safe_save(pdf_file)
+    pdf_text = extract_text_from_pdf(pdf_path)
 
-    if not pdf_text and not images:
-        return jsonify({"error": "파일이 없습니다. 물품사양서 PDF 또는 포장지 사진을 업로드해주세요."}), 400
-
-    result = analyze_quick_diagnosis(pdf_text=pdf_text, images=images, force=force)
+    result = analyze_quick_diagnosis(pdf_text=pdf_text, force=force)
     return jsonify(result)
 
 
@@ -97,18 +80,13 @@ def analyze_verify():
     """기능 B: 서류 검증 — AI 분석 엔진"""
     force = request.args.get("force", "").lower() == "true"
 
-    pdf_text = None
-    supporting_docs_text = ""
-    images = None
-
     # 물품사양서 PDF (필수)
     pdf_file = request.files.get("pdf_file")
-    if pdf_file and pdf_file.filename and _allowed(pdf_file.filename):
-        pdf_path = _safe_save(pdf_file)
-        pdf_text = extract_text_from_pdf(pdf_path)
-
-    if not pdf_text:
+    if not pdf_file or not pdf_file.filename or not _allowed(pdf_file.filename):
         return jsonify({"error": "물품사양서 PDF를 업로드해주세요."}), 400
+
+    pdf_path = _safe_save(pdf_file)
+    pdf_text = extract_text_from_pdf(pdf_path)
 
     # 증빙서류 (복수)
     docs = request.files.getlist("supporting_docs")
@@ -119,19 +97,11 @@ def analyze_verify():
             if doc.filename.lower().endswith(".pdf"):
                 text = extract_text_from_pdf(doc_path)
                 doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} ---\n{text}")
-            else:
-                doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} (이미지 파일) ---")
     supporting_docs_text = "\n\n".join(doc_texts)
-
-    # 포장지 사진 (선택)
-    label_img = request.files.get("label_image")
-    if label_img and label_img.filename and _allowed(label_img.filename):
-        images = [_file_to_b64(label_img)]
 
     result = analyze_document_verification(
         pdf_text=pdf_text,
         supporting_docs_text=supporting_docs_text,
-        images=images,
         force=force,
     )
     return jsonify(result)

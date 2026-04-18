@@ -72,8 +72,7 @@ def load_knowledge_base() -> str:
 # Claude API 호출
 # ─────────────────────────────────────────────────
 
-def call_claude_api(system_prompt: str, knowledge_base: str,
-                    user_message: str, images=None) -> dict:
+def call_claude_api(system_prompt: str, knowledge_base: str, user_message: str) -> dict:
     """
     Claude API 호출 (Prompt Caching 적용).
 
@@ -102,18 +101,7 @@ def call_claude_api(system_prompt: str, knowledge_base: str,
         },
     ]
 
-    user_content = []
-    if images:
-        for img in images:
-            user_content.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": img["media_type"],
-                    "data": img["data"],
-                },
-            })
-    user_content.append({"type": "text", "text": user_message})
+    user_content = [{"type": "text", "text": user_message}]
 
     payload = {
         "model": MODEL,
@@ -154,17 +142,14 @@ def call_claude_api(system_prompt: str, knowledge_base: str,
 # 기능 A: 빠른 진단
 # ─────────────────────────────────────────────────
 
-def analyze_quick_diagnosis(pdf_text=None, images=None, force=False) -> dict:
+def analyze_quick_diagnosis(pdf_text: str, force=False) -> dict:
     """
-    기능 A: 물품사양서 PDF 텍스트 또는 포장지 이미지로 빠른 진단.
+    기능 A: 물품사양서 PDF 텍스트로 빠른 진단.
 
     force=True: 캐시 무시하고 재분석
     """
     kb = load_knowledge_base()
-
-    # 캐시 키: 이미지는 실제 데이터 길이로 구분
-    img_sig = str(sum(len(i["data"]) for i in images)) if images else "no_img"
-    cache_key = get_cache_key(pdf_text or "", img_sig)
+    cache_key = get_cache_key(pdf_text)
 
     if not force:
         cached = get_cached_result(cache_key)
@@ -173,30 +158,13 @@ def analyze_quick_diagnosis(pdf_text=None, images=None, force=False) -> dict:
             cached["cache_key"] = cache_key
             return cached
 
-    # 사용자 메시지 구성
-    if pdf_text and images:
-        user_msg = (
-            "다음은 신규 물품의 포장지 사진과 물품사양서입니다.\n"
-            "기능 A(빠른 진단)를 수행해주세요.\n\n"
-            f"[물품사양서 내용]\n{pdf_text}\n\n"
-            "포장지 사진도 함께 첨부되어 있습니다. 포장지의 표시사항도 함께 분석해주세요."
-        )
-    elif pdf_text:
-        user_msg = (
-            "다음은 신규 물품의 물품사양서입니다.\n"
-            "기능 A(빠른 진단)를 수행해주세요.\n\n"
-            f"[물품사양서 내용]\n{pdf_text}"
-        )
-    elif images:
-        user_msg = (
-            "다음은 신규 물품의 포장지 사진입니다.\n"
-            "기능 A(빠른 진단)를 수행해주세요.\n"
-            "포장지의 표시사항을 읽고 분석해주세요."
-        )
-    else:
-        return {"error": "분석할 파일이 없습니다. 물품사양서 PDF 또는 포장지 사진을 업로드해주세요."}
+    user_msg = (
+        "다음은 신규 물품의 물품사양서입니다.\n"
+        "기능 A(빠른 진단)를 수행해주세요.\n\n"
+        f"[물품사양서 내용]\n{pdf_text}"
+    )
 
-    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg, images)
+    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg)
     if "error" not in result:
         result["cache_key"] = cache_key
         save_to_cache(cache_key, result)
@@ -208,16 +176,14 @@ def analyze_quick_diagnosis(pdf_text=None, images=None, force=False) -> dict:
 # ─────────────────────────────────────────────────
 
 def analyze_document_verification(pdf_text: str, supporting_docs_text: str,
-                                   images=None, force=False) -> dict:
+                                   force=False) -> dict:
     """
-    기능 B: 물품사양서 + 증빙서류 + 포장지 사진으로 서류 검증.
+    기능 B: 물품사양서 + 증빙서류로 서류 검증.
 
     force=True: 캐시 무시하고 재분석
     """
     kb = load_knowledge_base()
-
-    img_sig = str(sum(len(i["data"]) for i in images)) if images else "no_img"
-    cache_key = get_cache_key(pdf_text, supporting_docs_text, img_sig)
+    cache_key = get_cache_key(pdf_text, supporting_docs_text)
 
     if not force:
         cached = get_cached_result(cache_key)
@@ -232,13 +198,8 @@ def analyze_document_verification(pdf_text: str, supporting_docs_text: str,
         f"[물품사양서 내용]\n{pdf_text}\n\n"
         f"[증빙서류 내용]\n{supporting_docs_text}"
     )
-    if images:
-        user_msg += (
-            "\n\n포장지 사진도 함께 첨부되어 있습니다. "
-            "포장지의 표시사항과 물품사양서의 내용 일치 여부도 검증해주세요."
-        )
 
-    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg, images)
+    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg)
     if "error" not in result:
         result["cache_key"] = cache_key
         save_to_cache(cache_key, result)
@@ -292,18 +253,15 @@ SYSTEM_PROMPT_WEBAPP = """
 ---
 
 ### 기능 B: 서류 검증
-물품사양서 + 증빙서류(+ 선택적으로 포장지 사진)를 받으면 검증합니다.
+물품사양서 + 증빙서류를 받으면 검증합니다.
 
 출력 형식 (반드시 이 구조를 따르세요):
 
-#### 1️⃣ 포장지 ↔ 물품사양서 대조 (포장지 사진이 있는 경우만)
-항목별로 일치/불일치를 테이블로 정리합니다.
-
-#### 2️⃣ 물품사양서 기재 점검
+#### 1️⃣ 물품사양서 기재 점검
 20개 필수 항목의 기재 여부를 점검합니다.
 미기재/오류 항목에 대해 무엇을 어떻게 보완해야 하는지 설명합니다.
 
-#### 3️⃣ 증빙서류 점검
+#### 2️⃣ 증빙서류 점검
 각 필요 서류의 제출/미제출 여부를 표시합니다.
 제출된 서류에 대해:
 - 제품명이 물품사양서와 일치하는지
@@ -311,7 +269,7 @@ SYSTEM_PROMPT_WEBAPP = """
 - 검사 결과가 적합한지
 문제가 발견되면 구체적으로 설명합니다.
 
-#### 4️⃣ 출하 승인 시 예상 이슈
+#### 3️⃣ 출하 승인 시 예상 이슈
 전국물품위원회 심의에서 논의될 수 있는 사항을 미리 알려줍니다.
 실무자가 사전에 대비할 수 있도록 합니다.
 

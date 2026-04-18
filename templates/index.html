@@ -46,7 +46,7 @@
     <section id="tab-quick" class="tab-panel active">
       <div class="section-intro">
         <h2>📋 빠른 진단</h2>
-        <p>포장지 사진이나 물품사양서를 올리면, AI가 출하에 필요한 서류와 주의사항을 분석해드려요.</p>
+        <p>물품사양서를 올리면, AI가 출하에 필요한 서류와 주의사항을 분석해드려요.</p>
       </div>
 
       <form id="quick-form" class="upload-form">
@@ -60,12 +60,6 @@
             <p class="filename" id="quick-pdf-name"></p>
           </div>
         </label>
-
-        <div class="file-row" style="margin-top:12px;">
-          <label>📷 포장지 사진 (선택, JPG/PNG)</label>
-          <input type="file" name="label_image" id="quick-img" accept=".jpg,.jpeg,.png">
-          <span class="filename-inline" id="quick-img-name"></span>
-        </div>
 
         <button type="submit" class="primary-btn" id="quick-submit-btn">진단 시작</button>
       </form>
@@ -99,12 +93,6 @@
           <input type="file" name="supporting_docs" id="verify-docs"
                  accept=".pdf,.jpg,.jpeg,.png" multiple>
           <span class="filename-inline" id="verify-docs-name"></span>
-        </div>
-        <div class="file-row">
-          <label>📷 포장지 사진 (선택, JPG/PNG)</label>
-          <input type="file" name="label_image" id="verify-img"
-                 accept=".jpg,.jpeg,.png">
-          <span class="filename-inline" id="verify-img-name"></span>
         </div>
         <button type="submit" class="primary-btn" id="verify-submit-btn">검증 시작</button>
       </form>
