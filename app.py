@@ -8,6 +8,7 @@
 """
 import os
 import uuid
+import base64
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
@@ -43,6 +44,13 @@ def _safe_save(file_storage) -> str:
     path = os.path.join(UPLOAD_DIR, name)
     file_storage.save(path)
     return path
+
+
+def _file_to_b64(file_storage) -> dict:
+    """이미지 파일 → base64 dict (Claude Vision용)"""
+    data = base64.b64encode(file_storage.read()).decode("utf-8")
+    mt = file_storage.content_type or "image/jpeg"
+    return {"data": data, "media_type": mt}
 
 
 # ─────────────────────────────────────────────────
@@ -88,20 +96,27 @@ def analyze_verify():
     pdf_path = _safe_save(pdf_file)
     pdf_text = extract_text_from_pdf(pdf_path)
 
-    # 증빙서류 (복수)
+    # 증빙서류 (복수 — PDF는 텍스트 추출, 이미지는 Vision으로 전달)
     docs = request.files.getlist("supporting_docs")
     doc_texts = []
+    doc_images = []
+    IMAGE_EXTS = {"jpg", "jpeg", "png"}
     for i, doc in enumerate(docs or []):
-        if doc and doc.filename and _allowed(doc.filename):
+        if not doc or not doc.filename or not _allowed(doc.filename):
+            continue
+        ext = doc.filename.rsplit(".", 1)[-1].lower()
+        if ext == "pdf":
             doc_path = _safe_save(doc)
-            if doc.filename.lower().endswith(".pdf"):
-                text = extract_text_from_pdf(doc_path)
-                doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} ---\n{text}")
+            text = extract_text_from_pdf(doc_path)
+            doc_texts.append(f"--- 증빙서류 {i+1}: {doc.filename} ---\n{text}")
+        elif ext in IMAGE_EXTS:
+            doc_images.append({**_file_to_b64(doc), "filename": doc.filename, "index": i+1})
     supporting_docs_text = "\n\n".join(doc_texts)
 
     result = analyze_document_verification(
         pdf_text=pdf_text,
         supporting_docs_text=supporting_docs_text,
+        doc_images=doc_images or None,
         force=force,
     )
     return jsonify(result)

@@ -72,7 +72,8 @@ def load_knowledge_base() -> str:
 # Claude API 호출
 # ─────────────────────────────────────────────────
 
-def call_claude_api(system_prompt: str, knowledge_base: str, user_message: str) -> dict:
+def call_claude_api(system_prompt: str, knowledge_base: str,
+                    user_message: str, images=None) -> dict:
     """
     Claude API 호출 (Prompt Caching 적용).
 
@@ -101,7 +102,18 @@ def call_claude_api(system_prompt: str, knowledge_base: str, user_message: str) 
         },
     ]
 
-    user_content = [{"type": "text", "text": user_message}]
+    user_content = []
+    if images:
+        for img in images:
+            user_content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": img["media_type"],
+                    "data": img["data"],
+                },
+            })
+    user_content.append({"type": "text", "text": user_message})
 
     payload = {
         "model": MODEL,
@@ -176,14 +188,15 @@ def analyze_quick_diagnosis(pdf_text: str, force=False) -> dict:
 # ─────────────────────────────────────────────────
 
 def analyze_document_verification(pdf_text: str, supporting_docs_text: str,
-                                   force=False) -> dict:
+                                   doc_images=None, force=False) -> dict:
     """
     기능 B: 물품사양서 + 증빙서류로 서류 검증.
 
     force=True: 캐시 무시하고 재분석
     """
     kb = load_knowledge_base()
-    cache_key = get_cache_key(pdf_text, supporting_docs_text)
+    img_sig = str(sum(len(i["data"]) for i in doc_images)) if doc_images else ""
+    cache_key = get_cache_key(pdf_text, supporting_docs_text, img_sig)
 
     if not force:
         cached = get_cached_result(cache_key)
@@ -192,14 +205,20 @@ def analyze_document_verification(pdf_text: str, supporting_docs_text: str,
             cached["cache_key"] = cache_key
             return cached
 
+    img_note = ""
+    if doc_images:
+        names = ", ".join(i.get("filename", f"이미지{i.get('index','')}") for i in doc_images)
+        img_note = f"\n\n[이미지 증빙서류] 다음 파일들이 이미지로 첨부되어 있습니다: {names}\n각 이미지의 내용을 읽고 검증에 활용해주세요."
+
     user_msg = (
         "다음은 신규 물품의 물품사양서와 증빙서류입니다.\n"
         "기능 B(서류 검증)를 수행해주세요.\n\n"
         f"[물품사양서 내용]\n{pdf_text}\n\n"
         f"[증빙서류 내용]\n{supporting_docs_text}"
+        f"{img_note}"
     )
 
-    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg)
+    result = call_claude_api(SYSTEM_PROMPT_WEBAPP, kb, user_msg, images=doc_images)
     if "error" not in result:
         result["cache_key"] = cache_key
         save_to_cache(cache_key, result)
