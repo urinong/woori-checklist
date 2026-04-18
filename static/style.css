@@ -81,7 +81,7 @@ html, body {
 /* ============================================================
  * 메인
  * ============================================================ */
-main { padding: 40px 0 72px; }
+main { padding: 56px 0 88px; }
 
 .page-body { display: flex; flex-direction: column; gap: 20px; }
 
@@ -93,7 +93,8 @@ main { padding: 40px 0 72px; }
 .intro-desc {
   margin: 0;
   font-size: 15px;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .notice-box {
@@ -106,6 +107,17 @@ main { padding: 40px 0 72px; }
   color: var(--orange-dark);
   line-height: 1.7;
   font-weight: 500;
+}
+.notice-box p {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+.notice-box ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.notice-box ul li {
+  margin-bottom: 4px;
 }
 
 /* ============================================================
@@ -345,7 +357,7 @@ main { padding: 40px 0 72px; }
   .site-header { padding: 26px 0 22px; }
   .site-header h1 { font-size: 22px; }
   .site-sub { font-size: 14px; }
-  main { padding: 28px 0 56px; }
+  main { padding: 40px 0 64px; }
   .upload-form { padding: 20px; }
   .dropzone { padding: 36px 14px; }
   .dropzone .icons { font-size: 34px; }
