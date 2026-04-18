@@ -83,7 +83,7 @@ html, body {
  * ============================================================ */
 main { padding: 56px 0 88px; }
 
-.page-body { display: flex; flex-direction: column; gap: 20px; padding-top: 8px; }
+.page-body { display: flex; flex-direction: column; gap: 20px; padding-top: 24px; }
 
 /* ============================================================
  * 섹션 인트로
