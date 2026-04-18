@@ -444,12 +444,11 @@ main { padding: 28px 0 60px; }
   font-size: 13px;
   line-height: 1.6;
 }
-.footer-logo {
-  display: block;
-  height: 84px;
-  width: auto;
-  margin: 0 auto 12px;
-  object-fit: contain;
+.footer-org {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 4px;
 }
 .site-footer p {
   margin: 0;
@@ -477,7 +476,6 @@ main { padding: 28px 0 60px; }
   .site-header { padding: 22px 0 20px; }
   .site-header h1 { font-size: 22px; }
   .site-header h1 .sub { font-size: 17px; }
-  .footer-logo { height: 66px; }
   .tab-btn { padding: 14px 18px; font-size: 14px; }
   .section-intro h2 { font-size: 18px; }
   .upload-form { padding: 20px; }
