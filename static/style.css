@@ -44,7 +44,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg-page);
+  background: #ffffff;
   color: var(--text-primary);
   font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
                "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -81,7 +81,7 @@ html, body {
 /* ============================================================
  * 메인
  * ============================================================ */
-main { padding: 56px 0 88px; }
+main { padding: 56px 0 88px; background: var(--bg-page); }
 
 .page-body { display: flex; flex-direction: column; gap: 20px; padding-top: 24px; }
 
