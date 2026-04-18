@@ -83,7 +83,7 @@ html, body {
  * ============================================================ */
 main { padding: 56px 0 88px; }
 
-.page-body { display: flex; flex-direction: column; gap: 20px; }
+.page-body { display: flex; flex-direction: column; gap: 20px; padding-top: 8px; }
 
 /* ============================================================
  * 섹션 인트로
@@ -333,7 +333,7 @@ main { padding: 56px 0 88px; }
  * 푸터
  * ============================================================ */
 .site-footer {
-  background: var(--bg-card);
+  background: #ffffff;
   border-top: 1px solid var(--border);
   padding: 28px 0;
   text-align: center;
