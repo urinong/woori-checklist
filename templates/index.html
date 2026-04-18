@@ -19,26 +19,26 @@
   <!-- ───────── 헤더 ───────── -->
   <header class="site-header">
     <div class="container">
-      <h1>
-        우리농 신규물품 출하 준비
-        <span class="sub">자가진단 체크리스트</span>
-      </h1>
+      <h1>우리농 신규물품 출하 준비</h1>
+      <p class="site-sub">자가진단 체크리스트</p>
     </div>
   </header>
 
   <!-- ───────── 메인 ───────── -->
   <main class="container">
+    <div class="page-body">
 
-    <section class="tab-panel active">
       <div class="section-intro">
-        <h2>📋 빠른 진단</h2>
-        <p>물품사양서를 올리면, 출하에 필요한 서류와 주의사항을 안내해드려요.</p>
+        <p class="intro-desc">물품사양서를 올리면, 출하에 필요한 서류와 주의사항을 안내해드려요.</p>
+        <div class="notice-box">
+          ※ 유의사항 : 물품사양서의 모든 내용을 작성하신 후 자가진단을 실행해주세요.
+          자가진단은 AI 기반 서비스로 호출 시마다 비용이 발생하므로, 불필요한 반복 실행은 삼가해주세요!
+        </div>
       </div>
 
       <form id="quick-form" class="upload-form">
         <label class="dropzone" id="quick-drop">
-          <input type="file" name="pdf_file" id="quick-pdf"
-                 accept=".pdf" hidden>
+          <input type="file" name="pdf_file" id="quick-pdf" accept=".pdf" hidden>
           <div class="drop-content">
             <div class="icons">📄</div>
             <p><strong>물품사양서 PDF</strong></p>
@@ -46,7 +46,6 @@
             <p class="filename" id="quick-pdf-name"></p>
           </div>
         </label>
-
         <button type="submit" class="primary-btn" id="quick-submit-btn">진단 시작</button>
       </form>
 
@@ -59,8 +58,8 @@
           <button type="button" class="reset-btn" onclick="resetForm('quick')">🆕 새 물품 분석하기</button>
         </div>
       </div>
-    </section>
 
+    </div>
   </main>
 
   <!-- ───────── 푸터 ───────── -->
