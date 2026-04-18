@@ -64,53 +64,24 @@ html, body {
 .site-header {
   background: #ffffff;
   border-bottom: 1px solid var(--border);
-  padding: 28px 0 24px;
-}
-/* 로고 이미지 */
-.site-logo {
-  display: block;
-  height: 88px;
-  width: auto;
-  margin-bottom: 16px;
-  object-fit: contain;
-}
-
-/* 하위 호환: 혹시 남아있을 경우 숨김 */
-.header-logos { display: none; }
-.logo-placeholder {
-  display: inline-flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 6px;
-  background: var(--green-light);
-  color: var(--green-dark);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  border: 1px solid var(--green-border);
-}
-.logo-placeholder.alt {
-  background: var(--green-dark);
-  color: #ffffff;
-  border-color: var(--green-dark);
+  padding: 32px 0 28px;
 }
 .site-header h1 {
-  margin: 0 0 6px;
-  font-size: 28px;
+  margin: 0 0 8px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.3;
 }
 .site-header h1 .sub {
   display: block;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 500;
   color: var(--green-dark);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .site-header .subtitle {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--text-secondary);
   font-size: 14px;
 }
@@ -467,13 +438,23 @@ main { padding: 28px 0 60px; }
 .site-footer {
   background: var(--bg-card);
   border-top: 1px solid var(--border);
-  padding: 24px 0;
+  padding: 28px 0;
   text-align: center;
   color: var(--text-secondary);
   font-size: 13px;
-  line-height: 1.8;
+  line-height: 1.6;
 }
-.site-footer strong { color: var(--green-dark); }
+.footer-logo {
+  display: block;
+  height: 56px;
+  width: auto;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+.site-footer p {
+  margin: 0;
+  color: var(--text-secondary);
+}
 
 /* ============================================================
  * 오류 메시지
@@ -493,10 +474,10 @@ main { padding: 28px 0 60px; }
  * ============================================================ */
 @media (max-width: 768px) {
   .container { padding: 0 16px; }
-  .site-header { padding: 20px 0 18px; }
-  .site-logo { height: 48px; }
+  .site-header { padding: 22px 0 20px; }
   .site-header h1 { font-size: 22px; }
   .site-header h1 .sub { font-size: 17px; }
+  .footer-logo { height: 44px; }
   .tab-btn { padding: 14px 18px; font-size: 14px; }
   .section-intro h2 { font-size: 18px; }
   .upload-form { padding: 20px; }

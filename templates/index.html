@@ -19,8 +19,6 @@
   <!-- ───────── 헤더 ───────── -->
   <header class="site-header">
     <div class="container">
-      <img src="{{ url_for('static', filename='logo.png') }}"
-           alt="가톨릭농민회 우리농" class="site-logo">
       <h1>
         우리농 신규물품 출하 준비
         <span class="sub">자가진단 체크리스트</span>
@@ -111,8 +109,9 @@
   <!-- ───────── 푸터 ───────── -->
   <footer class="site-footer">
     <div class="container">
-      <strong>우리농촌살리기운동본부</strong><br>
-      생산소비실무자회의 · 물품위원회
+      <img src="{{ url_for('static', filename='logo.png') }}"
+           alt="가톨릭농민회 우리농" class="footer-logo">
+      <p>생산소비실무자회의 · 물품위원회</p>
     </div>
   </footer>
 
